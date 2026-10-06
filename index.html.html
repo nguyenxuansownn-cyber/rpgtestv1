@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>DRG City Mini - Đệ tử 1 slot</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#10131b;color:#eee;font:14px Arial,sans-serif;overflow:hidden}
+#game{position:relative;width:100vw;height:100vh;background:radial-gradient(circle at 50% 45%,#252b38,#0d1016 70%)}
+#arena{position:absolute;inset:0;overflow:hidden}
+.entity{position:absolute;transform:translate(-50%,-50%);user-select:none;pointer-events:none}
+#player{font-size:34px;z-index:20}
+.boss{font-size:38px;z-index:12}.great{font-size:52px}.world{font-size:68px;z-index:14;filter:drop-shadow(0 0 10px #ffd54a)}.enemy{font-size:27px;z-index:10}
+.ore{font-size:24px}.gold{font-size:24px}
+#hud{position:absolute;left:12px;top:12px;z-index:50;background:#171c27dd;padding:12px;border:1px solid #3b4354;border-radius:12px;min-width:250px}
+#hudToggle{position:absolute;right:-10px;top:-10px;width:34px;height:34px;padding:0;border-radius:50%;z-index:2;font-size:16px;background:#283247;border:1px solid #68758c;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+#hudContent{display:block}
+#hud.collapsed{min-width:0;width:46px;height:46px;padding:5px}
+#hud.collapsed #hudContent{display:none}
+#hud.collapsed #hudToggle{position:static;width:34px;height:34px}
+
+.bar{height:9px;background:#333;border-radius:8px;overflow:hidden;margin:4px 0 8px}.fill{height:100%;background:#4ade80;width:100%}
+#panel{position:absolute;right:12px;top:12px;z-index:50;width:310px;max-height:calc(100vh - 24px);overflow:auto;background:#171c27ee;padding:12px;border:1px solid #3b4354;border-radius:12px}
+h3{margin:4px 0 9px}.row{display:flex;justify-content:space-between;gap:8px;margin:7px 0}.section{border-top:1px solid #343b49;padding-top:9px;margin-top:9px}
+button{background:#283247;color:#fff;border:1px solid #4a5870;border-radius:8px;padding:7px 9px;cursor:pointer}button:hover{background:#35425b}
+button:active{transform:scale(.97)}.danger{background:#542a31}.danger:hover{background:#71343d}
+.bossbox{margin:7px 0;padding:7px;background:#202633;border-radius:8px}.small{font-size:12px;color:#aeb8ca}
+#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:50;background:#171c27dd;padding:7px 12px;border-radius:9px;color:#b9c4d8}
+#toast{position:absolute;left:50%;top:18%;transform:translateX(-50%);z-index:100;background:#20283a;padding:10px 16px;border-radius:10px;opacity:0;transition:.2s;pointer-events:none}
+#mobileControls{display:none;position:absolute;left:18px;bottom:24px;z-index:80;width:154px;height:154px;touch-action:none;user-select:none}
+.mbtn{position:absolute;width:50px;height:50px;border-radius:14px;background:#283247dd;border:2px solid #68758c;color:#fff;font-size:24px;font-weight:bold;touch-action:none;user-select:none;-webkit-user-select:none}
+.mbtn:active{background:#4a5870}
+#mbUp{left:52px;top:0}#mbLeft{left:0;top:52px}#mbDown{left:52px;top:104px}#mbRight{left:104px;top:52px}
+#autoAttack{display:none;position:absolute;right:18px;bottom:32px;z-index:80;border-radius:50%;width:76px;height:76px;background:#283247ee;border:2px solid #68758c;color:#fff;font-size:12px;font-weight:bold;touch-action:none}
+@media (max-width:700px){
+  body{overflow:hidden}
+  #panel{width:250px;max-width:72vw;max-height:48vh;font-size:12px}
+  #hud{min-width:190px;padding:8px;font-size:12px}
+  #hud.collapsed{width:46px;min-width:46px;padding:5px}
+  #hint{display:none}
+  #mobileControls,#autoAttack{display:block}
+}
+</style>
+</head>
+<body>
+<div id="game">
+<div id="arena"></div>
+<button id="hudToggle" type="button" aria-label="Thu gọn bảng chỉ số" title="Thu gọn bảng chỉ số">◀</button>
+ <div id="hudContent">
+  <div>🤖 HP: <b id="hp">100</b>/<span id="maxhp">100</span></div>
+  <div class="bar"><div id="hpfill" class="fill"></div></div>
+  <div>⚔️ Sức mạnh: <b id="power">10</b></div>
+  <div>🏃 Tốc độ: <b id="speed">3</b></div>
+  <div>💰 Vàng: <b id="gold">0</b></div>
+  <div>💎 Quặng: <b id="ore">0</b></div>
+  <div>🎒 Trang bị: <b id="items">0</b></div>
+</div>
+
+<div id="panel">
+  <h3>⚔️ DRG City Mini</h3>
+  <div class="small">Tự động đánh — WASD / phím mũi tên để di chuyển</div><div class="small" style="margin-top:4px">🌍 World Boss: 5.000.000.000 HP</div>
+
+  <div class="section">
+  <b>👑 Boss đang xuất hiện</b>
+  <div class="row"><span>🚦 Sinh Boss</span><button id="bossToggle">🟢 ĐANG BẬT</button></div><div class="row"><span>🌍 World Boss</span><button id="worldBossSpawnBtn">Triệu hồi</button></div>
+  <div class="small">Tắt chỉ ngăn Boss mới xuất hiện/respawn. Boss đang có trên bản đồ không bị ảnh hưởng.</div><div id="bossProgress" class="small" style="margin-top:5px">Tiến độ Đại Boss: 0/10 Boss thường</div>
+  <div id="bosses"></div>
+    <div id="worldBossBox" class="bossbox" style="display:none;border:1px solid #8a6b2d">
+      <b>🌍 WORLD BOSS</b>
+      <div id="worldBossStatus" class="small">Chưa xuất hiện</div>
+    </div>
+</div>
+
+  <div class="section">
+    <b>👤 Đệ tử của bạn</b>
+    <div id="disciple" class="small" style="margin:7px 0">Chưa có đệ tử.</div>
+    <button id="clearDisciple" class="danger">🗑️ Xóa đệ tử</button>
+  </div>
+
+  <div class="section">
+    <b>⬆️ Nâng cấp</b>
+    <div class="row"><span>⚔️ Sức mạnh</span><button data-up="damage">+ Sức mạnh</button></div>
+    <div class="row"><span>❤️ HP</span><button data-up="hp">+ HP</button></div>
+    <div class="row"><span>🏃 Tốc độ</span><button data-up="speed">+ Tốc độ</button></div>
+    <div class="small">Giữ nút để nâng cấp liên tục.</div>
+  </div>
+
+  <div class="section">
+    <b>💱 Đổi quặng</b>
+    <div class="row"><span>5 💎 → 20 💰</span><button id="convert">Đổi</button></div>
+  </div>
+
+  <div class="section">
+    <b>🎒 Trang bị</b>
+    <div id="inventory" class="small">Chưa có trang bị.</div>
+  </div>
+
+  <div class="section small">
+    ⭐ 5★: chỉ Đại Boss, tỷ lệ 20%, cộng % Sức mạnh.<br>
+    👤 Đệ tử: chỉ dùng 1 con, càng mạnh càng hiếm.<br>
+    👑 Đại Boss có thể xuất hiện cùng Boss thường.
+  </div>
+</div>
+<div id="mobileControls" aria-label="Nút di chuyển trên điện thoại">
+  <button type="button" class="mbtn" id="mbUp">▲</button>
+  <button type="button" class="mbtn" id="mbLeft">◀</button>
+  <button type="button" class="mbtn" id="mbDown">▼</button>
+  <button type="button" class="mbtn" id="mbRight">▶</button>
+</div>
+<button type="button" id="autoAttack">⚔️<br>TỰ ĐÁNH</button>
+<div id="hint">Di chuyển bằng WASD / ↑↓←→ • Nhân vật tự động tấn công mục tiêu gần nhất</div>
+<div id="toast"></div>
+</div>
+
+<script>
+const arena=document.getElementById('arena');
+const W=()=>innerWidth,H=()=>innerHeight;
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+let player={x:W()/2,y:H()/2,hp:100,maxhp:100,power:10,speed:3,gold:0,ore:0,items:0};
+let bosses=[], enemies=[], ores=[], golds=[], inventory=[];
+let disciple=null;
+let worldBoss=null;
+let keys={}; let last=performance.now(), lastAttack=0, lastBossSpawn=0, lastGreatSpawn=0;
+let bossSpawning=true;
+let normalBossSpawnCount=0;
+let worldBossTimer=performance.now()+rand(60000,90000);
+
+const tiers=[
+ {name:'Rác rưởi',power:10,weight:500},
+ {name:'Rác',power:20,weight:300},
+ {name:'Tạm',power:200,weight:120},
+ {name:'Ổn',power:2000,weight:50},
+ {name:'Mạnh',power:20000,weight:10},
+ {name:'Siêu mạnh',power:150000,weight:2}
+];
+
+function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.opacity=1;clearTimeout(toast.tm);toast.tm=setTimeout(()=>t.style.opacity=0,1500)}
+function addEl(cls,text,x,y){let e=document.createElement('div');e.className='entity '+cls;e.textContent=text;arena.appendChild(e);return e}
+function weightedTier(){
+ let total=tiers.reduce((s,t)=>s+t.weight,0),r=Math.random()*total;
+ for(const t of tiers){r-=t.weight;if(r<=0)return t} return tiers[0];
+}
+
+function rollDisciple(source){
+  // Probability is per Boss source:
+  // Normal Boss: 100% 1-stat disciple
+  // Great Boss: 20% 2-stat, 10% 3-stat
+  // World Boss: same base chances, but with exclusive stronger stat ranges.
+  const isWorld = source==='world';
+  const isGreat = source==='great';
+
+  let count = 1;
+  if(isGreat || isWorld){
+    const r=Math.random();
+    if(r<0.10) count=3;
+    else if(r<0.30) count=2;
+  }
+
+  const pool=[
+    {key:'damage',name:'⚔️ Sức mạnh',value:isWorld?rand(50000,250000):isGreat?rand(500,5000):rand(20,150)},
+    {key:'hp',name:'❤️ HP',value:isWorld?rand(20,60):isGreat?rand(5,25):rand(1,10)},
+    {key:'speed',name:'🏃 Tốc độ',value:isWorld?rand(1,5):isGreat?rand(0.5,2):rand(0.1,0.5)}
+  ];
+  pool.sort(()=>Math.random()-0.5);
+  return {
+    name: isWorld ? 'Đệ tử World Boss' : isGreat ? 'Đệ tử Đại Boss' : 'Đệ tử Boss',
+    stats: pool.slice(0,count)
+  };
+}
+
+function applyDisciple(d){
+  let powerBonus=0;
+  for(const s of d.stats){
+    if(s.key==='damage') powerBonus+=s.value;
+    else if(s.key==='hp'){
+      player.maxhp += Math.floor(player.maxhp*s.value/100);
+      player.hp = player.maxhp;
+    } else if(s.key==='speed'){
+      player.speed += s.value/100;
+    }
+  }
+  player.power += powerBonus;
+}
+
+function discipleText(d){
+  return `👤 <b>${d.name}</b><br>` +
+    d.stats.map(s=>`${s.name}: +${s.value.toLocaleString()}${s.key==='hp'||s.key==='speed'?'%':''}`).join('<br>');
+}
+
+function spawnWorldBoss(){
+  if(worldBoss) return false;
+  const hp=5000000000;
+  const b={
+    id:Math.random(), great:false, world:true, hp, maxhp:hp,
+    x:W()/2, y:Math.max(120,H()/2), el:null, lastMinion:performance.now()
+  };
+  b.el=addEl('boss world','🌍',b.x,b.y);
+  worldBoss=b;
+  toast('🌍 WORLD BOSS xuất hiện! 5 TỶ HP!');
+  render();
+  return true;
+}
+
+function killWorldBoss(){
+  if(!worldBoss) return;
+  worldBoss.el.remove();
+  worldBoss=null;
+
+  const goldReward=rand(500000,1500000);
+  player.gold+=goldReward;
+
+  // World Boss always gives a disciple roll; its 3-stat and 2-stat
+  // chances follow the agreed 10% / 20% / remaining 70% model.
+  if(!disciple){
+    disciple=rollDisciple('world');
+    applyDisciple(disciple);
+    toast(`🌍 Hạ World Boss! +${goldReward.toLocaleString()} vàng + Đệ tử ${disciple.stats.length} chỉ số!`);
+  }else{
+    toast(`🌍 Hạ World Boss! +${goldReward.toLocaleString()} vàng!`);
+  }
+  render();
+}
+function spawnDisciple(source='normal'){
+ if(disciple) return false;
+ if(source==='normal'){
+   let t=weightedTier();
+   disciple={name:t.name,stats:[{key:'damage',name:'⚔️ Sức mạnh',value:t.power}]};
+ }else{
+   disciple=rollDisciple(source);
+ }
+ applyDisciple(disciple);
+ toast(`👤 Nhận ${disciple.name}: ${disciple.stats.length} chỉ số`);
+ render();
+ return true;
+}
+function clearDisciple(){
+ if(!disciple)return;
+ const damageStat=disciple.stats?.find(s=>s.key==='damage');
+ if(damageStat) player.power-=damageStat.value;
+ for(const s of (disciple.stats||[])){
+   if(s.key==='hp'){
+     const oldMax=player.maxhp;
+     player.maxhp=Math.max(1,Math.floor(oldMax/(1+s.value/100)));
+     player.hp=Math.min(player.hp,player.maxhp);
+   } else if(s.key==='speed'){
+     player.speed=Math.max(0.1,player.speed-s.value/100);
+   }
+ }
+ toast(`🗑️ Đã xóa ${disciple.name}`);
+ disciple=null;render();
+}
+
+function makeBoss(great=false){
+ let hp=great?rand(500000,5000000):rand(450,4500);
+ let b={id:Math.random(),great,world:false,hp,maxhp:hp,x:rand(100,W()-100),y:rand(100,H()-100),el:null,lastMinion:performance.now()};
+ b.el=addEl('boss '+(great?'great':''),great?'👹':'👾',b.x,b.y);
+ bosses.push(b);
+ if(!great){
+   normalBossSpawnCount++;
+   if(normalBossSpawnCount>=10){
+     normalBossSpawnCount=0;
+     if(bossSpawning) setTimeout(()=>{if(bossSpawning) makeBoss(true)},500);
+     toast('👹 Đủ 10 Boss thường — Đại Boss xuất hiện!');
+   }
+ }
+ render();
+}
+function spawnEnemy(){
+ let e={x:rand(40,W()-40),y:rand(40,H()-40),hp:rand(20,80),power:rand(2,8),el:null};
+ e.el=addEl('enemy', ['🦂','🦇','👾'][rand(0,2)],e.x,e.y); enemies.push(e);
+}
+function dropLoot(b){
+ if(b.great){
+   if(Math.random()<.20){
+     let pct=rand(10,50);
+     inventory.push({name:['Titanic Weapon','Ancient God Gear','Celestial Destroyer','Demon King Weapon'][rand(0,3)],stars:5,pct});
+     player.items++; toast(`⭐ 5★ rơi ra! +${pct}% Sức mạnh`);
+     // 5★ is a percentage bonus to current/base strength.
+     player.power=Math.floor(player.power*(1+pct/100));
+   }else{
+     let p=rand(500,5000);
+     inventory.push({name:['Titan Gear','Ancient Destroyer','God Slayer','Mythic Weapon'][rand(0,3)],stars:4,power:p});
+     player.items++;player.power+=p;toast(`⭐⭐⭐⭐ 4★ +${p.toLocaleString()} Sức mạnh`);
+   }
+ }else{
+   let stars=rand(0,3),p=stars===0?rand(5,10):stars===1?rand(10,20):stars===2?rand(20,40):rand(40,80);
+   let names=['Rusty Gear','Hunter Gear','Elite Gear','Legendary Gear'];
+   inventory.push({name:names[stars],stars,power:p});player.items++;player.power+=p;
+   toast(`${'⭐'.repeat(stars)||'0★'} ${names[stars]} +${p} Sức mạnh`);
+ }
+}
+function killBoss(b){
+ b.el.remove();bosses=bosses.filter(x=>x!==b);dropLoot(b);
+ player.gold+=b.great?rand(1000,5000):rand(30,120);
+ if(!disciple && b.great && Math.random()<0.30) spawnDisciple('great');
+ if(!disciple && !b.great) spawnDisciple('normal');
+ if(!b.great && bossSpawning)
+   setTimeout(()=>{if(bossSpawning) makeBoss(false)},rand(7000,14000));
+ render();
+}
+function attack(){
+ let targets=[...bosses,...enemies]; if(worldBoss) targets.push(worldBoss); targets=targets.filter(t=>t.hp>0);
+ if(!targets.length)return;
+ targets.sort((a,b)=>dist(player,a)-dist(player,b));
+ let t=targets[0],dmg=player.power;
+ t.hp-=dmg;
+ if(t.hp<=0){
+   if(bosses.includes(t))killBoss(t);
+   else{t.el.remove();enemies=enemies.filter(x=>x!==t);player.gold+=rand(3,15)}
+ }
+}
+function updateBosses(dt){
+ if(worldBoss){
+   const b=worldBoss, d=dist(player,b);
+   if(d>100){b.x+=(player.x-b.x)/d*dt*7;b.y+=(player.y-b.y)/d*dt*7}
+   b.x=clamp(b.x,70,W()-70); b.y=clamp(b.y,70,H()-70);
+   b.el.style.left=b.x+'px'; b.el.style.top=b.y+'px';
+ }
+ for(const b of bosses){
+   let d=dist(player,b);
+   if(d>80){b.x+=(player.x-b.x)/d*dt*12;b.y+=(player.y-b.y)/d*dt*12}
+   b.x=clamp(b.x,40,W()-40);b.y=clamp(b.y,40,H()-40);
+   b.el.style.left=b.x+'px';b.el.style.top=b.y+'px';
+   // Correct disciple system: disciple belongs to player, never to boss.
+   // Great Boss periodically gets a 10% chance to offer a new disciple.
+   if(b.great && !disciple && performance.now()-b.lastMinion>5000){
+      b.lastMinion=performance.now();
+      if(Math.random()<0.10) spawnDisciple();
+   }
+ }
+}
+function updateEnemies(dt){
+ for(const e of enemies){
+   let d=dist(player,e);
+   if(d>35){e.x+=(player.x-e.x)/d*dt*18;e.y+=(player.y-e.y)/d*dt*18}
+   else player.hp-=e.power*dt*.35;
+   e.el.style.left=e.x+'px';e.el.style.top=e.y+'px';
+ }
+}
+function collect(){
+ for(let i=ores.length-1;i>=0;i--){let o=ores[i];if(dist(player,o)<35){player.ore++;o.el.remove();ores.splice(i,1)}}
+ for(let i=golds.length-1;i>=0;i--){let o=golds[i];if(dist(player,o)<35){player.gold++;o.el.remove();golds.splice(i,1)}}
+}
+function render(){
+ document.getElementById('hp').textContent=Math.max(0,Math.floor(player.hp));
+ document.getElementById('maxhp').textContent=player.maxhp;
+ document.getElementById('hpfill').style.width=(100*player.hp/player.maxhp)+'%';
+ document.getElementById('power').textContent=Math.floor(player.power).toLocaleString();
+ document.getElementById('speed').textContent=player.speed.toFixed(1);
+ document.getElementById('gold').textContent=player.gold.toLocaleString();
+ document.getElementById('ore').textContent=player.ore;
+ document.getElementById('items').textContent=player.items;
+ document.getElementById('disciple').innerHTML=disciple?
+   `👤 <b>${disciple.name}</b><br>⚔️ +${disciple.power.toLocaleString()} Sức mạnh`:'Chưa có đệ tử.';
+ document.getElementById('bossProgress').textContent=`Tiến độ Đại Boss: ${normalBossSpawnCount}/10 Boss thường`;
+ document.getElementById('bosses').innerHTML=bosses.length?bosses.map(b=>
+   `<div class="bossbox"><b>${b.great?'👹 ĐẠI BOSS':'👾 BOSS'}</b><br>HP: ${Math.max(0,Math.floor(b.hp)).toLocaleString()} / ${b.maxhp.toLocaleString()}<div class="bar"><div class="fill" style="width:${100*b.hp/b.maxhp}%"></div></div></div>`
+ ).join(''):'<span class="small">Chưa có boss</span>';
+ const wbBox=document.getElementById('worldBossBox');
+  const wbStatus=document.getElementById('worldBossStatus');
+  wbBox.style.display=worldBoss?'block':'none';
+  if(worldBoss){
+    wbStatus.innerHTML=`HP: ${Math.max(0,Math.floor(worldBoss.hp)).toLocaleString()} / ${worldBoss.maxhp.toLocaleString()}<div class="bar"><div class="fill" style="width:${100*worldBoss.hp/worldBoss.maxhp}%"></div></div>`;
+  }
+  document.getElementById('inventory').innerHTML=inventory.length?
+   inventory.slice(-8).map(i=>i.stars===5?`⭐️⭐️⭐️⭐️⭐️ ${i.name} — +${i.pct}% Sức mạnh`:`${i.stars?'⭐'.repeat(i.stars):'0★'} ${i.name} — +${i.power}` ).join('<br>'):'Chưa có trang bị.';
+}
+function upgrade(type){
+ if(type==='damage'&&player.gold>=30){player.gold-=30;player.power+=5}
+ else if(type==='hp'&&player.gold>=25){player.gold-=25;player.maxhp+=30;player.hp+=30}
+ else if(type==='speed'&&player.gold>=40){player.gold-=40;player.speed+=.2}
+ render();
+}
+document.querySelectorAll('[data-up]').forEach(btn=>{
+ let timer=null;
+ const start=()=>{upgrade(btn.dataset.up);timer=setInterval(()=>upgrade(btn.dataset.up),90)};
+ const stop=()=>{clearInterval(timer);timer=null};
+ btn.addEventListener('pointerdown',start);['pointerup','pointerleave','pointercancel'].forEach(e=>btn.addEventListener(e,stop));
+});
+const hud=document.getElementById('hud');
+const hudToggle=document.getElementById('hudToggle');
+hudToggle.onclick=()=>{
+  hud.classList.toggle('collapsed');
+  hudToggle.textContent=hud.classList.contains('collapsed')?'▶':'◀';
+  hudToggle.title=hud.classList.contains('collapsed')?'Mở bảng chỉ số':'Thu gọn bảng chỉ số';
+};
+
+document.getElementById('clearDisciple').onclick=clearDisciple;
+document.getElementById('convert').onclick=()=>{if(player.ore>=5){player.ore-=5;player.gold+=20;render()}};
+
+const worldBossSpawnBtn=document.getElementById('worldBossSpawnBtn');
+worldBossSpawnBtn.onclick=()=>spawnWorldBoss();
+
+const bossToggle=document.getElementById('bossToggle');
+bossToggle.onclick=()=>{
+  bossSpawning=!bossSpawning;
+  bossToggle.textContent=bossSpawning?'🟢 ĐANG BẬT':'🔴 ĐÃ TẮT';
+  bossToggle.style.background=bossSpawning?'#283247':'#542a31';
+  toast(bossSpawning?'👑 Đã bật sinh Boss':'🛑 Đã tắt sinh Boss — Boss hiện tại vẫn giữ nguyên');
+};
+
+// Điều khiển điện thoại: giữ nút để di chuyển liên tục.
+const touchButtons={
+  mbUp:'arrowup', mbDown:'arrowdown', mbLeft:'arrowleft', mbRight:'arrowright'
+};
+Object.entries(touchButtons).forEach(([id,key])=>{
+  const btn=document.getElementById(id);
+  const press=(e)=>{e.preventDefault();keys[key]=true;btn.setPointerCapture?.(e.pointerId)};
+  const release=(e)=>{e.preventDefault();keys[key]=false};
+  btn.addEventListener('pointerdown',press);
+  btn.addEventListener('pointerup',release);
+  btn.addEventListener('pointercancel',release);
+  btn.addEventListener('pointerleave',release);
+});
+
+// Tự động đánh luôn bật; nút chỉ để báo trạng thái trên điện thoại.
+const autoAttackBtn=document.getElementById('autoAttack');
+autoAttackBtn.addEventListener('pointerdown',e=>{e.preventDefault();toast('⚔️ Tự động đánh đang BẬT')});
+
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+
+function loop(now){
+ let dt=Math.min(.035,(now-last)/1000);last=now;
+ let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
+ let dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
+ if(dx||dy){let l=Math.hypot(dx,dy);player.x+=dx/l*player.speed*70*dt;player.y+=dy/l*player.speed*70*dt}
+ player.x=clamp(player.x,25,W()-25);player.y=clamp(player.y,25,H()-25);
+ if(!document.getElementById('player')){let p=addEl('','🤖',player.x,player.y);p.id='player'}
+ let pe=document.getElementById('player');pe.style.left=player.x+'px';pe.style.top=player.y+'px';
+ if(now-lastAttack>450){lastAttack=now;attack()}
+ updateBosses(dt);updateEnemies(dt);collect();
+ if(bossSpawning && now-lastBossSpawn>18000){lastBossSpawn=now;if(Math.random()<.55)makeBoss(false)}
+ 
+ if(Math.random()<dt*.10)spawnEnemy();
+ if(player.hp<=0){player.hp=player.maxhp;player.x=W()/2;player.y=H()/2;player.gold=Math.floor(player.gold*.8);toast('💥 Bạn bị hạ! Mất 20% vàng.')}
+ render();requestAnimationFrame(loop);
+}
+setTimeout(()=>{if(bossSpawning) makeBoss(false)},rand(5000,10000));
+
+for(let i=0;i<5;i++)spawnEnemy();
+render();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
