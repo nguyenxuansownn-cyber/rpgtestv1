@@ -32,7 +32,21 @@ button:active{transform:scale(.97)}.danger{background:#542a31}.danger:hover{back
 .mbtn:active{background:#4a5870}
 #mbUp{left:52px;top:0}#mbLeft{left:0;top:52px}#mbDown{left:52px;top:104px}#mbRight{left:104px;top:52px}
 #autoAttack{display:none;position:absolute;right:18px;bottom:32px;z-index:80;border-radius:50%;width:76px;height:76px;background:#283247ee;border:2px solid #68758c;color:#fff;font-size:12px;font-weight:bold;touch-action:none}
-@media (max-width:700px){
+@media (max-width:700px){@media (max-width:700px) and (orientation:landscape){
+  #panel{
+    max-height:80vh;
+  }
+
+  #mobileControls{
+    bottom:12px;
+    left:12px;
+  }
+
+  #autoAttack{
+    bottom:18px;
+    right:12px;
+  }
+}
   body{overflow:hidden}
   #panel{width:250px;max-width:72vw;max-height:48vh;font-size:12px}
   #hud{min-width:190px;padding:8px;font-size:12px}
