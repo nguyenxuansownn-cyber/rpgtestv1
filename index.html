@@ -336,6 +336,27 @@ button:focus-visible{outline:2px solid #facc15;outline-offset:2px}
 .enemy.broly .broly-sprite{width:112%;height:118%;}
 .enemy.super-broly .broly-sprite{width:112%;height:118%;filter:drop-shadow(0 0 4px #b7ff4a) drop-shadow(0 0 8px #22c55e);}
 
+
+/* KNIGHT online account gate */
+#knightAuthGate{position:fixed;inset:0;z-index:100000;background:radial-gradient(ellipse at top,#283a59 0%,#10131b 58%,#07090e 100%);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto}
+#knightAuthCard{width:min(440px,100%);background:#171c27;border:1px solid #e8c76d;border-radius:18px;padding:22px;box-shadow:0 18px 70px #000b;color:#f8fafc}
+#knightAuthCard h1{margin:0 0 6px;color:#facc15;font-size:27px;text-align:center}
+#knightAuthCard .auth-sub{color:#cbd5e1;text-align:center;margin:0 0 18px;font-size:13px;line-height:1.5}
+#knightAuthCard label{display:block;font-weight:700;margin:12px 0 5px}
+#knightAuthCard input{width:100%;padding:12px;border-radius:9px;border:1px solid #475569;background:#0b1120;color:#fff;font-size:16px}
+#knightAuthCard button,#knightAccountBadge button{padding:10px 12px;border-radius:9px;border:1px solid #e8c76d;background:#9a6b21;color:#fff;font-weight:800;cursor:pointer}
+#knightAuthCard button:disabled{opacity:.55;cursor:wait}
+#knightAuthActions{display:flex;gap:8px;margin-top:14px}
+#knightAuthActions button{flex:1}
+#knightAuthMessage{margin-top:12px;white-space:pre-wrap;line-height:1.45;font-size:13px;color:#fde68a;overflow-wrap:anywhere}
+#knightLocalPlay{width:100%;margin-top:10px;background:#253246!important;border-color:#64748b!important}
+#knightSaveChoice{display:none;margin-top:14px;padding:12px;border:1px solid #64748b;border-radius:10px;background:#0f172a}
+#knightSaveChoice p{line-height:1.45}
+#knightSaveChoice button{width:100%;margin-top:8px}
+#knightAccountBadge{position:fixed;left:12px;bottom:12px;z-index:9999;display:none;align-items:center;gap:8px;max-width:calc(100vw - 24px);padding:8px 10px;background:#111827ed;border:1px solid #64748b;border-radius:10px;color:#fff;font-size:12px;box-shadow:0 3px 12px #0008}
+#knightAccountEmail{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:520px){#knightAuthCard{padding:17px}#knightAuthCard h1{font-size:23px}#knightAccountBadge{left:6px;bottom:6px;gap:5px;padding:6px;font-size:11px}#knightAccountBadge button{padding:7px}}
+
 </style>
 </head>
 <body>
@@ -523,8 +544,38 @@ button:focus-visible{outline:2px solid #facc15;outline-offset:2px}
  </div>
 </div>
 </div>
+
+<div id="knightAuthGate" role="dialog" aria-modal="true" aria-labelledby="knightAuthTitle">
+ <div id="knightAuthCard">
+  <h1 id="knightAuthTitle">⚔️ KNIGHT</h1>
+  <p class="auth-sub">Đăng nhập hoặc tạo tài khoản để đồng bộ nhân vật giữa các thiết bị.</p>
+  <form id="knightAuthForm">
+   <label for="knightAuthEmail">Email</label>
+   <input id="knightAuthEmail" type="email" autocomplete="email" required maxlength="254" placeholder="ban@example.com">
+   <label for="knightAuthPassword">Mật khẩu (ít nhất 8 ký tự)</label>
+   <input id="knightAuthPassword" type="password" autocomplete="current-password" required minlength="8" maxlength="128" placeholder="Nhập mật khẩu">
+   <div id="knightAuthActions">
+    <button id="knightSignIn" type="submit">Đăng nhập</button>
+    <button id="knightSignUp" type="button">Tạo tài khoản</button>
+   </div>
+  </form>
+  <div id="knightAuthMessage" role="status">Đang kiểm tra cấu hình tài khoản...</div>
+  <div id="knightSaveChoice">
+   <b>Chọn dữ liệu nhân vật</b>
+   <p>Phát hiện dữ liệu đã lưu trên thiết bị và dữ liệu trực tuyến. Hãy chọn bản muốn giữ. Bản còn lại sẽ không bị xóa khỏi máy chủ/thiết bị bởi thao tác chọn này.</p>
+   <button id="knightUseCloud" type="button">Tải nhân vật trực tuyến về thiết bị</button>
+   <button id="knightUseLocal" type="button">Dùng dữ liệu trên thiết bị và tải lên tài khoản</button>
+  </div>
+  <button id="knightLocalPlay" type="button">Chơi bằng dữ liệu trên thiết bị</button>
+ </div>
+</div>
+<div id="knightAccountBadge"><span id="knightAccountEmail"></span><button id="knightSyncNow" type="button">Lưu ngay</button><button id="knightSignOut" type="button">Đăng xuất</button></div>
+
 <canvas id="knightVfxCanvas" aria-hidden="true"></canvas>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script src="./account.js"></script>
 <script>
 const arena=document.getElementById('arena');
 // Thế giới lớn gấp 10 lần chiều rộng và chiều cao màn hình; camera chỉ hiển thị một cửa sổ nhỏ.
@@ -1146,6 +1197,7 @@ function saveGame(){
       villageQuests: Array.isArray(villageQuests)?villageQuests:[]
     };
     localStorage.setItem(SAVE_KEY,JSON.stringify(data));
+    if(typeof window.knightCloudQueueSave==='function')window.knightCloudQueueSave(data);
   }catch(e){}
 }
 
@@ -1830,6 +1882,7 @@ document.getElementById('reviveVillageBtn').addEventListener('click',()=>{
 });
 let lastUiRender=0;
 function loop(now){
+ if(window.__accountReady===false){last=now;requestAnimationFrame(loop);return;}
  let dt=Math.min(.035,(now-last)/1000);last=now;
  let dx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);
  let dy=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);
