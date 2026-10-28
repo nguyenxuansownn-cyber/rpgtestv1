@@ -53,22 +53,56 @@
 #mapSwitch,#zoneSwitch{position:fixed;right:12px;z-index:46;padding:5px 9px;background:#26251ddd;border-color:#ead19a;font-weight:bold}#mapSwitch{top:57px}#zoneSwitch{top:91px;border-color:#86efac}
 .entity{position:absolute;transform:translate(-50%,-50%);user-select:none;pointer-events:none}
 #player{font-size:34px;z-index:20;width:42px;height:50px;image-rendering:pixelated;filter:drop-shadow(0 3px 0 #173d1c)}
-/* Knight rank title and aura */
+/* KNIGHT rank titles — mẫu B: cánh + khiên, hiệu ứng tăng dần D → S */
 #player{overflow:visible}
-#player .knight-title{position:absolute;left:50%;top:-25px;transform:translateX(-50%);z-index:30;white-space:nowrap;font:900 10px/1.15 Arial,sans-serif;letter-spacing:.35px;padding:3px 6px;border-radius:5px;background:rgba(10,15,28,.9);border:1px solid #94a3b8;color:#e2e8f0;text-shadow:0 1px 2px #000;box-shadow:0 1px 5px #0008;pointer-events:none}
-#player .knight-title.rank-d{color:#d1d5db;border-color:#9ca3af}
-#player .knight-title.rank-c{color:#7dd3fc;border-color:#38bdf8;text-shadow:0 0 5px #0284c7,0 1px 2px #000}
-#player .knight-title.rank-b{color:#fde68a;border-color:#f59e0b;background:linear-gradient(100deg,#422006e8,#713f12e8);text-shadow:0 0 6px #f59e0b,0 1px 2px #000}
-#player .knight-title.rank-a{color:#e9d5ff;border-color:#c084fc;background:linear-gradient(100deg,#3b0764ed,#581c87ed);text-shadow:0 0 7px #a855f7,0 1px 2px #000}
-#player .knight-title.rank-s{color:#fff7ad;border-color:#fb7185;background:linear-gradient(100deg,#7f1d1ded,#9a3412ed,#713f12ed);text-shadow:0 0 5px #f97316,0 0 10px #facc15;animation:knightTitlePulse 1.5s ease-in-out infinite alternate}
+#player .knight-title{
+ position:absolute;left:50%;top:-34px;transform:translateX(-50%);z-index:30;
+ display:inline-flex;align-items:center;justify-content:center;min-width:94px;max-width:190px;
+ padding:5px 13px 5px;font:900 9px/1.15 Arial,sans-serif;letter-spacing:.25px;
+ white-space:nowrap;border:1px solid var(--rank-edge,#b8a07a);border-radius:5px 5px 7px 7px;
+ color:var(--rank-text,#fff0cf);
+ background:linear-gradient(180deg,var(--rank-top,#5c4630) 0%,var(--rank-bg,#17151b) 48%,#080b12 100%);
+ text-shadow:0 1px 2px #000,0 0 5px var(--rank-glow,#b88b4b);
+ box-shadow:0 2px 0 #050609,0 0 0 1px #ffffff20 inset,0 0 7px var(--rank-glow,#b88b4b);
+ pointer-events:none;isolation:isolate;
+}
+#player .knight-title .knight-title-text{position:relative;z-index:2}
+#player .knight-title:before,#player .knight-title:after{
+ content:"";position:absolute;top:3px;width:19px;height:17px;z-index:-1;
+ background:linear-gradient(135deg,var(--rank-top),var(--rank-edge) 55%,#17151b);
+ border:1px solid var(--rank-edge);box-shadow:0 0 5px var(--rank-glow);
+}
+#player .knight-title:before{left:-13px;transform:skewY(24deg) rotate(-9deg);clip-path:polygon(0 0,100% 8%,82% 35%,100% 52%,62% 55%,82% 82%,0 100%,22% 67%,0 52%,23% 35%)}
+#player .knight-title:after{right:-13px;transform:scaleX(-1) skewY(24deg) rotate(-9deg);clip-path:polygon(0 0,100% 8%,82% 35%,100% 52%,62% 55%,82% 82%,0 100%,22% 67%,0 52%,23% 35%)}
+#player .knight-title .knight-gem{
+ position:absolute;left:50%;top:-10px;transform:translateX(-50%) rotate(45deg);width:12px;height:12px;
+ background:linear-gradient(135deg,var(--rank-gem-hi),var(--rank-gem) 58%,var(--rank-edge));
+ border:1px solid #fff8d7;box-shadow:0 0 4px var(--rank-glow),0 0 9px var(--rank-glow);
+ z-index:3
+}
+#player .knight-title .knight-gem:after{content:"";position:absolute;inset:2px;border:1px solid #fff8;opacity:.8}
+#player .knight-title.rank-d{--rank-top:#9b6739;--rank-bg:#302015;--rank-edge:#d4a36b;--rank-text:#f8dfb4;--rank-glow:#b87333;--rank-gem:#c58b4a;--rank-gem-hi:#ffe3a3}
+#player .knight-title.rank-c{--rank-top:#b8c4ce;--rank-bg:#202a31;--rank-edge:#e5e7eb;--rank-text:#f8fafc;--rank-glow:#86efac;--rank-gem:#22c55e;--rank-gem-hi:#dcfce7}
+#player .knight-title.rank-b{--rank-top:#fbbf24;--rank-bg:#4a2b08;--rank-edge:#fde68a;--rank-text:#fff1a8;--rank-glow:#38bdf8;--rank-gem:#0284c7;--rank-gem-hi:#dbeafe;animation:knightTitleB 1.8s ease-in-out infinite alternate}
+#player .knight-title.rank-a{--rank-top:#c084fc;--rank-bg:#35105b;--rank-edge:#f0abfc;--rank-text:#fae8ff;--rank-glow:#d946ef;--rank-gem:#a855f7;--rank-gem-hi:#f5d0fe;animation:knightTitleA 1.4s ease-in-out infinite alternate}
+#player .knight-title.rank-s{--rank-top:#fde68a;--rank-bg:#6b210b;--rank-edge:#fff1a8;--rank-text:#fff7c2;--rank-glow:#fb923c;--rank-gem:#dc2626;--rank-gem-hi:#fff7ed;animation:knightTitleS 1s ease-in-out infinite alternate}
+#player .knight-title.rank-s .knight-gem{width:15px;height:15px;top:-12px}
 #player .knight-aura{display:none;position:absolute;left:50%;top:50%;width:76px;height:88px;transform:translate(-50%,-54%);border-radius:50%;z-index:-1;pointer-events:none;opacity:.72}
-#player.knight-rank-b .knight-aura{display:block;background:radial-gradient(ellipse,rgba(250,204,21,.22),rgba(245,158,11,.16) 38%,transparent 72%);box-shadow:0 0 9px 3px #f59e0b66;animation:knightAuraB 1.7s ease-in-out infinite alternate}
-#player.knight-rank-a .knight-aura{display:block;width:88px;height:100px;background:radial-gradient(ellipse,rgba(216,180,254,.28),rgba(168,85,247,.2) 40%,transparent 72%);box-shadow:0 0 13px 5px #a855f766;animation:knightAuraA 1.3s ease-in-out infinite alternate}
-#player.knight-rank-s .knight-aura{display:block;width:100px;height:112px;background:radial-gradient(ellipse,rgba(254,240,138,.32),rgba(249,115,22,.22) 30%,rgba(244,63,94,.18) 55%,transparent 73%);box-shadow:0 0 17px 7px #f9731680,0 0 28px 9px #facc1533;animation:knightAuraS .9s ease-in-out infinite alternate}
-@keyframes knightTitlePulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
-@keyframes knightAuraB{from{opacity:.42;transform:translate(-50%,-54%) scale(.92)}to{opacity:.82;transform:translate(-50%,-54%) scale(1.06)}}
-@keyframes knightAuraA{from{opacity:.45;transform:translate(-50%,-54%) scale(.92) rotate(-3deg)}to{opacity:.9;transform:translate(-50%,-54%) scale(1.08) rotate(3deg)}}
-@keyframes knightAuraS{from{opacity:.55;transform:translate(-50%,-54%) scale(.94) rotate(-4deg)}to{opacity:1;transform:translate(-50%,-54%) scale(1.1) rotate(4deg)}}
+#player.knight-rank-c .knight-aura{display:block;width:70px;height:78px;background:radial-gradient(ellipse,rgba(74,222,128,.20),transparent 70%);box-shadow:0 0 8px 2px #22c55e33;animation:knightAuraC 2.1s ease-in-out infinite alternate}
+#player.knight-rank-b .knight-aura{display:block;background:radial-gradient(ellipse,rgba(250,204,21,.25),rgba(56,189,248,.15) 38%,transparent 72%);box-shadow:0 0 10px 3px #38bdf866;animation:knightAuraB 1.7s ease-in-out infinite alternate}
+#player.knight-rank-a .knight-aura{display:block;width:88px;height:100px;background:radial-gradient(ellipse,rgba(216,180,254,.3),rgba(168,85,247,.2) 40%,transparent 72%);box-shadow:0 0 14px 5px #a855f766;animation:knightAuraA 1.3s ease-in-out infinite alternate}
+#player.knight-rank-s .knight-aura{display:block;width:104px;height:116px;background:radial-gradient(ellipse,rgba(255,247,194,.4),rgba(249,115,22,.26) 30%,rgba(220,38,38,.16) 55%,transparent 73%);box-shadow:0 0 18px 7px #f9731680,0 0 30px 9px #facc1533;animation:knightAuraS .85s ease-in-out infinite alternate}
+#player.knight-rank-a .knight-aura:before,#player.knight-rank-s .knight-aura:before{content:"";position:absolute;left:50%;top:50%;width:80%;height:85%;border:2px solid currentColor;border-color:var(--rank-glow,#c084fc) transparent;clip-path:polygon(50% 0,72% 16%,100% 30%,80% 55%,70% 100%,50% 78%,30% 100%,20% 55%,0 30%,28% 16%);animation:knightWingFlare 2.3s linear infinite}
+#player.knight-rank-a .knight-aura:before{color:#d946ef}
+#player.knight-rank-s .knight-aura:before{color:#fbbf24;animation-duration:1.3s}
+@keyframes knightTitleB{from{filter:brightness(1);box-shadow:0 2px 0 #050609,0 0 0 1px #ffffff20 inset,0 0 7px #38bdf866}to{filter:brightness(1.18);box-shadow:0 2px 0 #050609,0 0 0 1px #ffffff35 inset,0 0 13px #38bdf8cc}}
+@keyframes knightTitleA{from{filter:brightness(1);transform:translateX(-50%) scale(1)}to{filter:brightness(1.22);transform:translateX(-50%) scale(1.04)}}
+@keyframes knightTitleS{from{filter:brightness(1);box-shadow:0 2px 0 #050609,0 0 0 1px #fff8 inset,0 0 10px #fb923caa}to{filter:brightness(1.32);box-shadow:0 2px 0 #050609,0 0 0 1px #fff inset,0 0 20px #facc15,0 0 30px #f97316aa}}
+@keyframes knightAuraC{from{opacity:.2;transform:translate(-50%,-54%) scale(.92)}to{opacity:.55;transform:translate(-50%,-54%) scale(1.04)}}
+@keyframes knightAuraB{from{opacity:.35;transform:translate(-50%,-54%) scale(.92)}to{opacity:.82;transform:translate(-50%,-54%) scale(1.06)}}
+@keyframes knightAuraA{from{opacity:.45;transform:translate(-50%,-54%) scale(.92) rotate(-3deg)}to{opacity:.95;transform:translate(-50%,-54%) scale(1.08) rotate(3deg)}}
+@keyframes knightAuraS{from{opacity:.55;transform:translate(-50%,-54%) scale(.94) rotate(-4deg)}to{opacity:1;transform:translate(-50%,-54%) scale(1.12) rotate(4deg)}}
+@keyframes knightWingFlare{from{transform:translate(-50%,-50%) rotate(0) scale(.88);opacity:.3}to{transform:translate(-50%,-50%) rotate(180deg) scale(1.08);opacity:.9}}
 #questTracker{position:absolute;left:10px;top:118px;z-index:35;width:min(250px,42vw);max-height:34vh;overflow:auto;padding:7px 9px;border:1px solid #b6a36a;border-radius:8px;background:rgba(15,23,42,.88);color:#f8fafc;font:11px/1.35 Arial,sans-serif;box-shadow:0 2px 8px #0005;pointer-events:auto}
 #questTracker .qt-head{font-weight:900;color:#fde68a;margin-bottom:4px}
 #questTracker .qt-item{padding:4px 0;border-top:1px solid #ffffff22}
@@ -1722,9 +1756,9 @@ let villageQuest=null; // compatibility alias for older save versions
 // Knight promotion counts quests only after their rewards are claimed.
 let knightQuestCounts={D:0,C:0,B:0,A:0};
 function knightRank(){if((knightQuestCounts.D||0)<10)return 'D';if((knightQuestCounts.C||0)<20)return 'C';if((knightQuestCounts.B||0)<30)return 'B';if((knightQuestCounts.A||0)<50)return 'A';return 'S';}
-function knightRankLabel(rank=knightRank()){return `HIỆP SĨ CẤP ${rank}`;}
+function knightRankLabel(rank=knightRank()){return ({D:'HIỆP SĨ ĐỒNG',C:'HIỆP SĨ BẠC',B:'HIỆP SĨ VÀNG',A:'HIỆP SĨ TÍM',S:'HIỆP SĨ HUYỀN THOẠI'})[rank]||'HIỆP SĨ';}
 function knightPromotionGoal(){const r=knightRank();if(r==='D')return {rank:'D',next:'C',have:knightQuestCounts.D||0,need:10};if(r==='C')return {rank:'C',next:'B',have:knightQuestCounts.C||0,need:20};if(r==='B')return {rank:'B',next:'A',have:knightQuestCounts.B||0,need:30};if(r==='A')return {rank:'A',next:'S',have:knightQuestCounts.A||0,need:50};return {rank:'S',next:null,have:0,need:0};}
-function renderKnightRank(){const p=document.getElementById('player');if(!p)return;const rank=knightRank();p.classList.remove('knight-rank-d','knight-rank-c','knight-rank-b','knight-rank-a','knight-rank-s');p.classList.add('knight-rank-'+rank.toLowerCase());let aura=p.querySelector('.knight-aura');if(!aura){aura=document.createElement('span');aura.className='knight-aura';p.appendChild(aura);}let title=p.querySelector('.knight-title');if(!title){title=document.createElement('span');title.className='knight-title';p.appendChild(title);}title.className='knight-title rank-'+rank.toLowerCase();title.textContent=knightRankLabel(rank);const goal=knightPromotionGoal();title.title=rank==='S'?'Hạng cao nhất · hào quang tối thượng':`Tiến độ thăng cấp: ${goal.have}/${goal.need} nhiệm vụ hạng ${goal.rank}`;}
+function renderKnightRank(){const p=document.getElementById('player');if(!p)return;const rank=knightRank();p.classList.remove('knight-rank-d','knight-rank-c','knight-rank-b','knight-rank-a','knight-rank-s');p.classList.add('knight-rank-'+rank.toLowerCase());let aura=p.querySelector('.knight-aura');if(!aura){aura=document.createElement('span');aura.className='knight-aura';p.appendChild(aura);}let title=p.querySelector('.knight-title');if(!title){title=document.createElement('span');title.className='knight-title';p.appendChild(title);}title.className='knight-title rank-'+rank.toLowerCase();title.innerHTML='<span class="knight-gem"></span><span class="knight-title-text">'+knightRankLabel(rank)+'</span>';const goal=knightPromotionGoal();title.title=rank==='S'?'Hạng cao nhất · hào quang tối thượng':`Tiến độ thăng cấp: ${goal.have}/${goal.need} nhiệm vụ hạng ${goal.rank}`;}
 function renderQuestTracker(){const box=document.getElementById('questTracker');if(!box)return;const goal=knightPromotionGoal();const promotion=goal.next?`<div class="qt-item"><div class="qt-label"><span>🏅 ${knightRankLabel()}</span><span>${goal.have}/${goal.need}</span></div><div class="qt-bar"><div class="qt-fill" style="width:${Math.max(0,Math.min(100,100*goal.have/goal.need))}%"></div></div><div>Thăng lên cấp ${goal.next}: hoàn thành ${goal.need} nhiệm vụ hạng ${goal.rank}</div></div>`:'<div class="qt-item qt-done">🏆 Đã đạt cấp S tối cao!</div>';const tasks=villageQuests.length?villageQuests.map(q=>{const done=Math.max(0,Math.min(Number(q.kills)||1,Number(q.progress)||0)),need=Math.max(1,Number(q.kills)||1),pct=Math.max(0,Math.min(100,100*done/need));return `<div class="qt-item"><div class="qt-label"><span>${q.progress>=q.kills?'✓ ':''}Nhiệm vụ ${q.rank}</span><span>${done}/${need}</span></div><div class="qt-bar"><div class="qt-fill" style="width:${pct}%"></div></div><div>${questTargetLabel(q)}${q.progress>=q.kills?' · <b class="qt-done">Về làng nhận thưởng</b>':''}</div></div>`;}).join(''):'<div class="qt-item qt-empty">Chưa nhận nhiệm vụ</div>';box.innerHTML=`<div class="qt-head">📜 NHIỆM VỤ · ${villageQuests.length}/3</div>${tasks}${promotion}`;}
 const QUESTS={D:{name:'D',kills:10,gold:3000,ore:0,exp:1500,cooldown:30000},C:{name:'C',kills:30,gold:10000,ore:1,exp:6000,cooldown:60000},B:{name:'B',kills:1,gold:35000,ore:2,exp:20000,cooldown:120000},A:{name:'A',kills:1,gold:120000,ore:4,exp:75000,cooldown:300000},S:{name:'S',kills:1,gold:400000,ore:8,exp:250000,cooldown:900000}};
 function questTargetType(rank){return rank==='B'||rank==='A'?'boss':rank==='S'?'worldBoss':'mob';}
